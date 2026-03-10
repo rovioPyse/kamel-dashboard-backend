@@ -2,5 +2,15 @@
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
   "files": [],
-  "references": []
+  "references": [
+    {
+      "path": "./apps/kamel-service"
+    },
+    {
+      "path": "./apps/kamel-assembly"
+    },
+    {
+      "path": "./apps/kamel-admin"
+    }
+  ]
 }
