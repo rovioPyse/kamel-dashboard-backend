@@ -8,7 +8,7 @@ export interface HttpEvent {
     requestId?: string;
     authorizer?: {
       jwt?: {
-        claims?: Record<string, string | undefined>;
+        claims?: Record<string, string | string[] | undefined>;
       };
     };
   };
@@ -88,11 +88,13 @@ export const requireAnyGroup = (
   event: HttpEvent,
   allowedGroups: string[],
 ): HttpResponse | null => {
-  const rawGroups = event.requestContext?.authorizer?.jwt?.claims?.["cognito:groups"] ?? "";
-  const groups = rawGroups
-    .split(",")
-    .map((group) => group.trim())
-    .filter(Boolean);
+  const rawGroups = event.requestContext?.authorizer?.jwt?.claims?.["cognito:groups"];
+  const groups = Array.isArray(rawGroups)
+    ? rawGroups.map((group) => group.trim()).filter(Boolean)
+    : (rawGroups ?? "")
+        .split(",")
+        .map((group) => group.trim())
+        .filter(Boolean);
 
   if (allowedGroups.some((group) => groups.includes(group))) {
     return null;

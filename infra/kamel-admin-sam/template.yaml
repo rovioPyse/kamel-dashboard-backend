@@ -28,7 +28,7 @@ Globals:
       - x86_64
     Tracing: Active
     CodeUri: ../../
-    Handler: handler
+    Handler: main.handler
     VpcConfig:
       SecurityGroupIds:
         - Fn::ImportValue: !Sub KamelLambdaSG-${Environment}
@@ -103,7 +103,7 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         EntryPoints:
-          - apps/kamel-admin/src/handlers/bikes.ts
+          - apps/kamel-admin/src/main.ts
         Target: es2022
         Sourcemap: true
 
@@ -162,7 +162,7 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         EntryPoints:
-          - apps/kamel-admin/src/handlers/users.ts
+          - apps/kamel-admin/src/main.ts
         Target: es2022
         Sourcemap: true
 
@@ -204,7 +204,7 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         EntryPoints:
-          - apps/kamel-admin/src/handlers/providers.ts
+          - apps/kamel-admin/src/main.ts
         Target: es2022
         Sourcemap: true
 
@@ -246,7 +246,7 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         EntryPoints:
-          - apps/kamel-admin/src/handlers/service-centres.ts
+          - apps/kamel-admin/src/main.ts
         Target: es2022
         Sourcemap: true
 
@@ -276,7 +276,7 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         EntryPoints:
-          - apps/kamel-admin/src/handlers/dashboard.ts
+          - apps/kamel-admin/src/main.ts
         Target: es2022
         Sourcemap: true
 

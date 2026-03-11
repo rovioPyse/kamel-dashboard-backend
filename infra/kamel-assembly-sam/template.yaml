@@ -28,7 +28,7 @@ Globals:
       - x86_64
     Tracing: Active
     CodeUri: ../../
-    Handler: handler
+    Handler: main.handler
     VpcConfig:
       SecurityGroupIds:
         - Fn::ImportValue: !Sub KamelLambdaSG-${Environment}
@@ -117,7 +117,7 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         EntryPoints:
-          - apps/kamel-assembly/src/handlers/assembly-records.ts
+          - apps/kamel-assembly/src/main.ts
         Target: es2022
         Sourcemap: true
 
@@ -153,7 +153,7 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         EntryPoints:
-          - apps/kamel-assembly/src/handlers/assembly-checks.ts
+          - apps/kamel-assembly/src/main.ts
         Target: es2022
         Sourcemap: true
 
@@ -199,7 +199,7 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         EntryPoints:
-          - apps/kamel-assembly/src/handlers/assembly-attachments.ts
+          - apps/kamel-assembly/src/main.ts
         Target: es2022
         Sourcemap: true
 
@@ -229,7 +229,7 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         EntryPoints:
-          - apps/kamel-assembly/src/handlers/assembly-signoffs.ts
+          - apps/kamel-assembly/src/main.ts
         Target: es2022
         Sourcemap: true
 

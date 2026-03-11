@@ -97,5 +97,7 @@
       }
     }
   },
-  "dependencies": {}
+  "dependencies": {
+    "@kamel-dashboard-backend/logging": "0.0.1"
+  }
 }
