@@ -11,6 +11,9 @@
     },
     {
       "path": "./apps/kamel-admin"
+    },
+    {
+      "path": "./libs/logging"
     }
   ]
 }
