@@ -1,0 +1,245 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Kamel assembly API stack
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [dev, prod]
+
+  DatabaseName:
+    Type: String
+    Default: kamel
+
+  DatabaseEndpoint:
+    Type: String
+    Default: ""
+
+  DatabaseSecretArn:
+    Type: String
+    Default: ""
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 15
+    MemorySize: 256
+    Architectures:
+      - x86_64
+    Tracing: Active
+    CodeUri: ../../
+    Handler: handler
+    VpcConfig:
+      SecurityGroupIds:
+        - Fn::ImportValue: !Sub KamelLambdaSG-${Environment}
+      SubnetIds:
+        - Fn::ImportValue: !Sub KamelPrivateSubnet1-${Environment}
+        - Fn::ImportValue: !Sub KamelPrivateSubnet2-${Environment}
+    Environment:
+      Variables:
+        APP_ENV: !Ref Environment
+        APP_NAME: kamel-assembly
+        DATABASE_NAME: !Ref DatabaseName
+        DATABASE_ENDPOINT: !Ref DatabaseEndpoint
+        DATABASE_SECRET_ARN: !Ref DatabaseSecretArn
+        USER_POOL_ID:
+          Fn::ImportValue: !Sub KamelUserPoolId-${Environment}
+        USER_POOL_ARN:
+          Fn::ImportValue: !Sub KamelUserPoolArn-${Environment}
+        JWT_ISSUER:
+          Fn::ImportValue: !Sub KamelIssuerUrl-${Environment}
+        ATTACHMENT_BUCKET:
+          Fn::ImportValue: !Sub KamelRawBucket-${Environment}
+
+Resources:
+  AssemblyApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref Environment
+      Auth:
+        DefaultAuthorizer: SharedJwtAuthorizer
+        Authorizers:
+          SharedJwtAuthorizer:
+            IdentitySource: "$request.header.Authorization"
+            JwtConfiguration:
+              issuer:
+                Fn::ImportValue: !Sub KamelIssuerUrl-${Environment}
+              audience:
+                - Fn::ImportValue: !Sub KamelAssemblyAppClientId-${Environment}
+
+  AssemblyRecordsHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub kamel-assembly-records-${Environment}
+      Description: Assembly record lifecycle API
+      Environment:
+        Variables:
+          HANDLER_NAME: assembly-records-handler
+          ALLOWED_GROUPS: assembly_user,admin
+      Events:
+        CreateAssemblyRecord:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref AssemblyApi
+            Path: /assembly-records
+            Method: POST
+        ListAssemblyRecords:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref AssemblyApi
+            Path: /assembly-records
+            Method: GET
+        GetAssemblyRecord:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref AssemblyApi
+            Path: /assembly-records/{assemblyRecordId}
+            Method: GET
+        UpdateAssemblyRecord:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref AssemblyApi
+            Path: /assembly-records/{assemblyRecordId}
+            Method: PATCH
+        ListBikeAssemblyRecords:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref AssemblyApi
+            Path: /bikes/{bikeId}/assembly-records
+            Method: GET
+        GetBikeAssemblySummary:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref AssemblyApi
+            Path: /bikes/{bikeId}/assembly-summary
+            Method: GET
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - apps/kamel-assembly/src/handlers/assembly-records.ts
+        Target: es2022
+        Sourcemap: true
+
+  AssemblyChecksHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub kamel-assembly-checks-${Environment}
+      Description: Assembly checks API
+      Environment:
+        Variables:
+          HANDLER_NAME: assembly-checks-handler
+          ALLOWED_GROUPS: assembly_user,admin
+      Events:
+        CreateAssemblyCheck:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref AssemblyApi
+            Path: /assembly-records/{assemblyRecordId}/checks
+            Method: POST
+        ListAssemblyChecks:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref AssemblyApi
+            Path: /assembly-records/{assemblyRecordId}/checks
+            Method: GET
+        UpdateAssemblyCheck:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref AssemblyApi
+            Path: /assembly-checks/{checkId}
+            Method: PATCH
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - apps/kamel-assembly/src/handlers/assembly-checks.ts
+        Target: es2022
+        Sourcemap: true
+
+  AssemblyAttachmentsHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub kamel-assembly-attachments-${Environment}
+      Description: Assembly attachments API
+      Environment:
+        Variables:
+          HANDLER_NAME: assembly-attachments-handler
+          ALLOWED_GROUPS: assembly_user,admin
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+            Resource: !Sub
+              - arn:${AWS::Partition}:s3:::${BucketName}/*
+              - BucketName:
+                  Fn::ImportValue: !Sub KamelRawBucket-${Environment}
+      Events:
+        CreateAssemblyAttachment:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref AssemblyApi
+            Path: /assembly-records/{assemblyRecordId}/attachments
+            Method: POST
+        ListAssemblyAttachments:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref AssemblyApi
+            Path: /assembly-records/{assemblyRecordId}/attachments
+            Method: GET
+        GetAssemblyUploadUrl:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref AssemblyApi
+            Path: /assembly-records/{assemblyRecordId}/attachments/upload-url
+            Method: POST
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - apps/kamel-assembly/src/handlers/assembly-attachments.ts
+        Target: es2022
+        Sourcemap: true
+
+  AssemblySignoffsHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub kamel-assembly-signoffs-${Environment}
+      Description: Assembly signoff API
+      Environment:
+        Variables:
+          HANDLER_NAME: assembly-signoffs-handler
+          ALLOWED_GROUPS: assembly_user,admin
+      Events:
+        CreateAssemblySignoff:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref AssemblyApi
+            Path: /assembly-records/{assemblyRecordId}/signoffs
+            Method: POST
+        ListAssemblySignoffs:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref AssemblyApi
+            Path: /assembly-records/{assemblyRecordId}/signoffs
+            Method: GET
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - apps/kamel-assembly/src/handlers/assembly-signoffs.ts
+        Target: es2022
+        Sourcemap: true
+
+Outputs:
+  AssemblyApiId:
+    Value: !Ref AssemblyApi
+    Export:
+      Name: !Sub KamelAssemblyApiId-${Environment}
+
+  AssemblyApiUrl:
+    Value: !Sub https://${AssemblyApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${Environment}
+    Export:
+      Name: !Sub KamelAssemblyApiUrl-${Environment}

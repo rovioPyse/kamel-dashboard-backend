@@ -1,0 +1,251 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Kamel service API stack
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [dev, prod]
+
+  DatabaseName:
+    Type: String
+    Default: kamel
+
+  DatabaseEndpoint:
+    Type: String
+    Default: ""
+
+  DatabaseSecretArn:
+    Type: String
+    Default: ""
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 15
+    MemorySize: 256
+    Architectures:
+      - x86_64
+    Tracing: Active
+    CodeUri: ../../
+    Handler: handler
+    VpcConfig:
+      SecurityGroupIds:
+        - Fn::ImportValue: !Sub KamelLambdaSG-${Environment}
+      SubnetIds:
+        - Fn::ImportValue: !Sub KamelPrivateSubnet1-${Environment}
+        - Fn::ImportValue: !Sub KamelPrivateSubnet2-${Environment}
+    Environment:
+      Variables:
+        APP_ENV: !Ref Environment
+        APP_NAME: kamel-service
+        DATABASE_NAME: !Ref DatabaseName
+        DATABASE_ENDPOINT: !Ref DatabaseEndpoint
+        DATABASE_SECRET_ARN: !Ref DatabaseSecretArn
+        USER_POOL_ID:
+          Fn::ImportValue: !Sub KamelUserPoolId-${Environment}
+        USER_POOL_ARN:
+          Fn::ImportValue: !Sub KamelUserPoolArn-${Environment}
+        JWT_ISSUER:
+          Fn::ImportValue: !Sub KamelIssuerUrl-${Environment}
+        ATTACHMENT_BUCKET:
+          Fn::ImportValue: !Sub KamelRawBucket-${Environment}
+
+Resources:
+  ServiceApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref Environment
+      Auth:
+        DefaultAuthorizer: SharedJwtAuthorizer
+        Authorizers:
+          SharedJwtAuthorizer:
+            IdentitySource: "$request.header.Authorization"
+            JwtConfiguration:
+              issuer:
+                Fn::ImportValue: !Sub KamelIssuerUrl-${Environment}
+              audience:
+                - Fn::ImportValue: !Sub KamelServiceAppClientId-${Environment}
+
+  ServiceRecordsHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub kamel-service-records-${Environment}
+      Description: Service record lifecycle API
+      Environment:
+        Variables:
+          HANDLER_NAME: service-records-handler
+          ALLOWED_GROUPS: service_user,admin
+      Events:
+        CreateServiceRecord:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ServiceApi
+            Path: /service-records
+            Method: POST
+        ListServiceRecords:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ServiceApi
+            Path: /service-records
+            Method: GET
+        GetServiceRecord:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ServiceApi
+            Path: /service-records/{serviceRecordId}
+            Method: GET
+        UpdateServiceRecord:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ServiceApi
+            Path: /service-records/{serviceRecordId}
+            Method: PATCH
+        ListBikeServiceRecords:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ServiceApi
+            Path: /bikes/{bikeId}/service-records
+            Method: GET
+        GetBikeServiceSummary:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ServiceApi
+            Path: /bikes/{bikeId}/service-summary
+            Method: GET
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - apps/kamel-service/src/handlers/service-records.ts
+        Target: es2022
+        Sourcemap: true
+
+  ServiceChecksHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub kamel-service-checks-${Environment}
+      Description: Service checks API
+      Environment:
+        Variables:
+          HANDLER_NAME: service-checks-handler
+          ALLOWED_GROUPS: service_user,admin
+      Events:
+        CreateServiceCheck:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ServiceApi
+            Path: /service-records/{serviceRecordId}/checks
+            Method: POST
+        ListServiceChecks:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ServiceApi
+            Path: /service-records/{serviceRecordId}/checks
+            Method: GET
+        UpdateServiceCheck:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ServiceApi
+            Path: /service-checks/{checkId}
+            Method: PATCH
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - apps/kamel-service/src/handlers/service-checks.ts
+        Target: es2022
+        Sourcemap: true
+
+  ServicePartsHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub kamel-service-parts-${Environment}
+      Description: Service parts API
+      Environment:
+        Variables:
+          HANDLER_NAME: service-parts-handler
+          ALLOWED_GROUPS: service_user,admin
+      Events:
+        CreateServicePart:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ServiceApi
+            Path: /service-records/{serviceRecordId}/parts-used
+            Method: POST
+        ListServiceParts:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ServiceApi
+            Path: /service-records/{serviceRecordId}/parts-used
+            Method: GET
+        UpdateServicePart:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ServiceApi
+            Path: /service-parts-used/{partUsageId}
+            Method: PATCH
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - apps/kamel-service/src/handlers/service-parts.ts
+        Target: es2022
+        Sourcemap: true
+
+  ServiceAttachmentsHandlerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub kamel-service-attachments-${Environment}
+      Description: Service attachments API
+      Environment:
+        Variables:
+          HANDLER_NAME: service-attachments-handler
+          ALLOWED_GROUPS: service_user,admin
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - s3:GetObject
+              - s3:PutObject
+            Resource: !Sub
+              - arn:${AWS::Partition}:s3:::${BucketName}/*
+              - BucketName:
+                  Fn::ImportValue: !Sub KamelRawBucket-${Environment}
+      Events:
+        CreateServiceAttachment:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ServiceApi
+            Path: /service-records/{serviceRecordId}/attachments
+            Method: POST
+        ListServiceAttachments:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ServiceApi
+            Path: /service-records/{serviceRecordId}/attachments
+            Method: GET
+        GetServiceUploadUrl:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ServiceApi
+            Path: /service-records/{serviceRecordId}/attachments/upload-url
+            Method: POST
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - apps/kamel-service/src/handlers/service-attachments.ts
+        Target: es2022
+        Sourcemap: true
+
+Outputs:
+  ServiceApiId:
+    Value: !Ref ServiceApi
+    Export:
+      Name: !Sub KamelServiceApiId-${Environment}
+
+  ServiceApiUrl:
+    Value: !Sub https://${ServiceApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${Environment}
+    Export:
+      Name: !Sub KamelServiceApiUrl-${Environment}

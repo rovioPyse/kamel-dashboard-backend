@@ -1,0 +1,35 @@
+## kamel-assembly-sam
+
+SAM stack for the Assembly backend API.
+
+### What this stack owns
+
+- One HTTP API for assembly routes
+- Four Lambda functions:
+  - `assembly-records-handler`
+  - `assembly-checks-handler`
+  - `assembly-attachments-handler`
+  - `assembly-signoffs-handler`
+- One per-stack JWT authorizer config tied to the shared Cognito user pool and assembly app client
+
+### Shared dependencies
+
+This stack imports shared values from:
+
+- `aws-kamel-network`
+  - Lambda security group
+  - private subnet IDs
+- `aws-kamel-auth`
+  - user pool ID
+  - user pool ARN
+  - issuer URL
+  - assembly app client ID
+- `aws-kamel-data`
+  - raw bucket export for attachment upload keys
+
+### Deployment
+
+```powershell
+sam build --config-env dev
+sam deploy --config-env dev
+```

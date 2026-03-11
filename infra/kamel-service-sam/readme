@@ -1,0 +1,35 @@
+## kamel-service-sam
+
+SAM stack for the Service backend API.
+
+### What this stack owns
+
+- One HTTP API for service routes
+- Four Lambda functions:
+  - `service-records-handler`
+  - `service-checks-handler`
+  - `service-parts-handler`
+  - `service-attachments-handler`
+- One per-stack JWT authorizer config tied to the shared Cognito user pool and service app client
+
+### Shared dependencies
+
+This stack imports shared values from:
+
+- `aws-kamel-network`
+  - Lambda security group
+  - private subnet IDs
+- `aws-kamel-auth`
+  - user pool ID
+  - user pool ARN
+  - issuer URL
+  - service app client ID
+- `aws-kamel-data`
+  - raw bucket export for attachment upload keys
+
+### Deployment
+
+```powershell
+sam build --config-env dev
+sam deploy --config-env dev
+```

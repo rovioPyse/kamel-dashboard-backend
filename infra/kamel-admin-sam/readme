@@ -1,0 +1,34 @@
+## kamel-admin-sam
+
+SAM stack for the Admin backend API.
+
+### What this stack owns
+
+- One HTTP API for admin routes
+- Five Lambda functions:
+  - `bikes-handler`
+  - `users-handler`
+  - `providers-handler`
+  - `service-centres-handler`
+  - `dashboard-handler`
+- One per-stack JWT authorizer config tied to the shared Cognito user pool and admin app client
+
+### Shared dependencies
+
+This stack imports shared values from:
+
+- `aws-kamel-network`
+  - Lambda security group
+  - private subnet IDs
+- `aws-kamel-auth`
+  - user pool ID
+  - user pool ARN
+  - issuer URL
+  - admin app client ID
+
+### Deployment
+
+```powershell
+sam build --config-env dev
+sam deploy --config-env dev
+```
