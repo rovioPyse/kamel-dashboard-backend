@@ -17,6 +17,12 @@
     },
     {
       "path": "./apps/sample-cognito"
+    },
+    {
+      "path": "./libs/common"
+    },
+    {
+      "path": "./libs/database"
     }
   ]
 }

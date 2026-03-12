@@ -47,7 +47,9 @@
   "workspaces": [
     "packages/*",
     "apps/*",
-    "libs/logging"
+    "libs/logging",
+    "libs/common",
+    "libs/database"
   ],
   "dependencies": {
     "amazon-cognito-identity-js": "^6.3.16",
