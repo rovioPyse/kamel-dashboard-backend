@@ -1,6 +1,6 @@
 import { createLogger } from "@kamel-dashboard-backend/logging";
+import type { HttpEvent } from "@kamel-dashboard-backend/common";
 import { randomUUID } from "crypto";
-import type { HttpEvent } from "../shared/http";
 import type { HttpLambdaContext } from "../types/lambda";
 
 export const buildLambdaContext = async (

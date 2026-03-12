@@ -1,4 +1,4 @@
-import { created, getPathParameter, list, ok, parseBody } from "../shared/http";
+import { created, getPathParameter, list, ok, parseBody } from "@kamel-dashboard-backend/common";
 import type { HttpLambdaContext } from "../types/lambda";
 
 export class ServiceAttachmentsService {

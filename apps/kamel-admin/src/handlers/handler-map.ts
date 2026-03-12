@@ -4,7 +4,7 @@ import ProvidersHandler from "./providers";
 import ServiceCentresHandler from "./service-centres";
 import UsersHandler from "./users";
 import type { HttpLambdaContext } from "../types/lambda";
-import type { HttpResponse } from "../shared/http";
+import type { HttpResponse } from "@kamel-dashboard-backend/common";
 
 type RouteDefinition = {
   handler: (lambdaContext: HttpLambdaContext) => Promise<HttpResponse>;

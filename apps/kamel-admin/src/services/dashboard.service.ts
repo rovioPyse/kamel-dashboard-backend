@@ -1,4 +1,4 @@
-import { getPathParameter, ok } from "../shared/http";
+import { getPathParameter, ok } from "@kamel-dashboard-backend/common";
 import type { HttpLambdaContext } from "../types/lambda";
 
 export class DashboardService {

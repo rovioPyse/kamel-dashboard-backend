@@ -1,4 +1,4 @@
-import { HttpResponse, requireAnyGroup } from "../shared/http";
+import { requireAnyGroup, type HttpResponse } from "@kamel-dashboard-backend/common";
 import { ServicePartsService } from "../services/service-parts.service";
 import type { HttpLambdaContext } from "../types/lambda";
 

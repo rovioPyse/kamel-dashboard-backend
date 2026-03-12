@@ -1,4 +1,4 @@
-import { HttpResponse, requireAnyGroup } from "../shared/http";
+import { requireAnyGroup, type HttpResponse } from "@kamel-dashboard-backend/common";
 import { AssemblyAttachmentsService } from "../services/assembly-attachments.service";
 import type { HttpLambdaContext } from "../types/lambda";
 

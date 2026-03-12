@@ -98,6 +98,7 @@
     }
   },
   "dependencies": {
+    "@kamel-dashboard-backend/common": "0.0.1",
     "@kamel-dashboard-backend/logging": "0.0.1"
   }
 }

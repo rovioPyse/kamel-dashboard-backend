@@ -1,4 +1,4 @@
-import { HttpEvent, HttpResponse, error } from "./shared/http";
+import { error, type HttpEvent, type HttpResponse } from "@kamel-dashboard-backend/common";
 import { routesMap } from "./handlers/handler-map";
 import { buildLambdaContext } from "./utils/context-builder";
 

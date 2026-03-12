@@ -3,7 +3,7 @@ import AssemblyChecksHandler from "./assembly-checks";
 import AssemblyRecordsHandler from "./assembly-records";
 import AssemblySignoffsHandler from "./assembly-signoffs";
 import type { HttpLambdaContext } from "../types/lambda";
-import type { HttpResponse } from "../shared/http";
+import type { HttpResponse } from "@kamel-dashboard-backend/common";
 
 type RouteDefinition = {
   handler: (lambdaContext: HttpLambdaContext) => Promise<HttpResponse>;

@@ -70,7 +70,12 @@ export const error = (
   });
 
 export const methodNotAllowed = (event: HttpEvent): HttpResponse =>
-  error(event, 405, "METHOD_NOT_ALLOWED", `Unsupported route ${event.routeKey ?? "unknown"}`);
+  error(
+    event,
+    405,
+    "METHOD_NOT_ALLOWED",
+    `Unsupported route ${event.routeKey ?? "unknown"}`,
+  );
 
 export const parseBody = <T>(event: HttpEvent): T | null => {
   if (!event.body) {
@@ -95,9 +100,9 @@ export const requireAnyGroup = (
   const groups = Array.isArray(rawGroups)
     ? rawGroups.map(normalizeGroup).filter(Boolean)
     : (rawGroups ?? "")
-      .split(",")
-      .map(normalizeGroup)
-      .filter(Boolean);
+        .split(",")
+        .map(normalizeGroup)
+        .filter(Boolean);
 
   if (allowedGroups.some((group) => groups.includes(group))) {
     return null;
@@ -106,5 +111,8 @@ export const requireAnyGroup = (
   return error(event, 403, "FORBIDDEN", "User does not have access to this resource");
 };
 
-export const getPathParameter = (event: HttpEvent, key: string, fallback: string): string =>
-  event.pathParameters?.[key] ?? fallback;
+export const getPathParameter = (
+  event: HttpEvent,
+  key: string,
+  fallback: string,
+): string => event.pathParameters?.[key] ?? fallback;
