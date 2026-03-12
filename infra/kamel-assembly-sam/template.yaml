@@ -65,6 +65,7 @@ Resources:
               issuer:
                 Fn::ImportValue: !Sub KamelIssuerUrl-${Environment}
               audience:
+                - Fn::ImportValue: !Sub KamelAdminAppClientId-${Environment}
                 - Fn::ImportValue: !Sub KamelAssemblyAppClientId-${Environment}
 
   AssemblyRecordsHandlerFunction:
