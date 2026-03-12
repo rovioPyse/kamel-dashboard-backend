@@ -84,17 +84,20 @@ export const parseBody = <T>(event: HttpEvent): T | null => {
   }
 };
 
+const normalizeGroup = (group: string): string =>
+  group.trim().replace(/^[\s\[\]"']+|[\s\[\]"']+$/g, "");
+
 export const requireAnyGroup = (
   event: HttpEvent,
   allowedGroups: string[],
 ): HttpResponse | null => {
   const rawGroups = event.requestContext?.authorizer?.jwt?.claims?.["cognito:groups"];
   const groups = Array.isArray(rawGroups)
-    ? rawGroups.map((group) => group.trim()).filter(Boolean)
+    ? rawGroups.map(normalizeGroup).filter(Boolean)
     : (rawGroups ?? "")
-        .split(",")
-        .map((group) => group.trim())
-        .filter(Boolean);
+      .split(",")
+      .map(normalizeGroup)
+      .filter(Boolean);
 
   if (allowedGroups.some((group) => groups.includes(group))) {
     return null;
