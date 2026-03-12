@@ -1,52 +1,41 @@
-import {
-  HttpResponse,
-  created,
-  getPathParameter,
-  list,
-  methodNotAllowed,
-  ok,
-  parseBody,
-  requireAnyGroup,
-} from "../shared/http";
+import { HttpResponse, requireAnyGroup } from "../shared/http";
+import { UsersService } from "../services/users.service";
 import type { HttpLambdaContext } from "../types/lambda";
 
-export const handler = async (lambdaContext: HttpLambdaContext): Promise<HttpResponse> => {
-  const { event } = lambdaContext;
-  const authError = requireAnyGroup(event, ["admin"]);
-  if (authError) {
-    return authError;
+class UsersHandler {
+  private static authorize(lambdaContext: HttpLambdaContext): HttpResponse | null {
+    return requireAnyGroup(lambdaContext.event, ["admin"]);
   }
 
-  const body = parseBody<Record<string, unknown>>(event) ?? {};
-  const userId = getPathParameter(event, "userId", "user-demo");
-
-  switch (event.routeKey) {
-    case "POST /users":
-      return created(event, {
-        id: `user-${Date.now()}`,
-        email: body.email ?? "user@example.com",
-        status: "invited",
-        groups: body.groups ?? [],
-      });
-    case "GET /users":
-      return list(event, []);
-    case "GET /users/{userId}":
-      return ok(event, {
-        id: userId,
-        email: "user@example.com",
-        groups: ["assembly_user"],
-      });
-    case "PATCH /users/{userId}":
-      return ok(event, {
-        id: userId,
-        ...body,
-      });
-    case "POST /users/{userId}/groups":
-      return ok(event, {
-        id: userId,
-        groups: body.groups ?? [],
-      });
-    default:
-      return methodNotAllowed(event);
+  static async handleCreateUser(lambdaContext: HttpLambdaContext): Promise<HttpResponse> {
+    const authError = UsersHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new UsersService(lambdaContext).createUser();
   }
-};
+
+  static async handleListUsers(lambdaContext: HttpLambdaContext): Promise<HttpResponse> {
+    const authError = UsersHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new UsersService(lambdaContext).listUsers();
+  }
+
+  static async handleGetUser(lambdaContext: HttpLambdaContext): Promise<HttpResponse> {
+    const authError = UsersHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new UsersService(lambdaContext).getUser();
+  }
+
+  static async handleUpdateUser(lambdaContext: HttpLambdaContext): Promise<HttpResponse> {
+    const authError = UsersHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new UsersService(lambdaContext).updateUser();
+  }
+
+  static async handleAssignGroups(lambdaContext: HttpLambdaContext): Promise<HttpResponse> {
+    const authError = UsersHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new UsersService(lambdaContext).assignGroups();
+  }
+}
+
+export default UsersHandler;

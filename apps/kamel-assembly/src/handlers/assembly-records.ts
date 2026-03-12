@@ -1,57 +1,61 @@
-import {
-  HttpResponse,
-  created,
-  getPathParameter,
-  list,
-  methodNotAllowed,
-  ok,
-  parseBody,
-  requireAnyGroup,
-} from "../shared/http";
+import { HttpResponse, requireAnyGroup } from "../shared/http";
+import { AssemblyRecordsService } from "../services/assembly-records.service";
 import type { HttpLambdaContext } from "../types/lambda";
 
 const allowedGroups = ["assembly_user", "admin"];
 
-export const handler = async (lambdaContext: HttpLambdaContext): Promise<HttpResponse> => {
-  const { event } = lambdaContext;
-  const authError = requireAnyGroup(event, allowedGroups);
-  if (authError) {
-    return authError;
+class AssemblyRecordsHandler {
+  private static authorize(lambdaContext: HttpLambdaContext): HttpResponse | null {
+    return requireAnyGroup(lambdaContext.event, allowedGroups);
   }
 
-  const body = parseBody<Record<string, unknown>>(event) ?? {};
-  const assemblyRecordId = getPathParameter(event, "assemblyRecordId", "assembly-record-demo");
-  const bikeId = getPathParameter(event, "bikeId", "bike-demo");
-
-  switch (event.routeKey) {
-    case "POST /assembly-records":
-      return created(event, {
-        id: `assembly-record-${Date.now()}`,
-        bikeId: body.bikeId ?? bikeId,
-        status: body.status ?? "draft",
-      });
-    case "GET /assembly-records":
-      return list(event, []);
-    case "GET /assembly-records/{assemblyRecordId}":
-      return ok(event, {
-        id: assemblyRecordId,
-        bikeId,
-        status: "in_progress",
-      });
-    case "PATCH /assembly-records/{assemblyRecordId}":
-      return ok(event, {
-        id: assemblyRecordId,
-        ...body,
-      });
-    case "GET /bikes/{bikeId}/assembly-records":
-      return list(event, []);
-    case "GET /bikes/{bikeId}/assembly-summary":
-      return ok(event, {
-        bikeId,
-        latestStatus: "completed",
-        openItems: 0,
-      });
-    default:
-      return methodNotAllowed(event);
+  static async handleCreateAssemblyRecord(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = AssemblyRecordsHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new AssemblyRecordsService(lambdaContext).createAssemblyRecord();
   }
-};
+
+  static async handleListAssemblyRecords(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = AssemblyRecordsHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new AssemblyRecordsService(lambdaContext).listAssemblyRecords();
+  }
+
+  static async handleGetAssemblyRecord(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = AssemblyRecordsHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new AssemblyRecordsService(lambdaContext).getAssemblyRecord();
+  }
+
+  static async handleUpdateAssemblyRecord(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = AssemblyRecordsHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new AssemblyRecordsService(lambdaContext).updateAssemblyRecord();
+  }
+
+  static async handleListBikeAssemblyRecords(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = AssemblyRecordsHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new AssemblyRecordsService(lambdaContext).listBikeAssemblyRecords();
+  }
+
+  static async handleGetBikeAssemblySummary(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = AssemblyRecordsHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new AssemblyRecordsService(lambdaContext).getBikeAssemblySummary();
+  }
+}
+
+export default AssemblyRecordsHandler;

@@ -1,46 +1,35 @@
-import {
-  HttpResponse,
-  created,
-  getPathParameter,
-  list,
-  methodNotAllowed,
-  ok,
-  parseBody,
-  requireAnyGroup,
-} from "../shared/http";
+import { HttpResponse, requireAnyGroup } from "../shared/http";
+import { ServiceCentresService } from "../services/service-centres.service";
 import type { HttpLambdaContext } from "../types/lambda";
 
-export const handler = async (lambdaContext: HttpLambdaContext): Promise<HttpResponse> => {
-  const { event } = lambdaContext;
-  const authError = requireAnyGroup(event, ["admin"]);
-  if (authError) {
-    return authError;
+class ServiceCentresHandler {
+  private static authorize(lambdaContext: HttpLambdaContext): HttpResponse | null {
+    return requireAnyGroup(lambdaContext.event, ["admin"]);
   }
 
-  const body = parseBody<Record<string, unknown>>(event) ?? {};
-  const serviceCentreId = getPathParameter(event, "serviceCentreId", "service-centre-demo");
-
-  switch (event.routeKey) {
-    case "POST /service-centres":
-      return created(event, {
-        id: `service-centre-${Date.now()}`,
-        name: body.name ?? "Dubai Main Workshop",
-        status: body.status ?? "active",
-      });
-    case "GET /service-centres":
-      return list(event, []);
-    case "GET /service-centres/{serviceCentreId}":
-      return ok(event, {
-        id: serviceCentreId,
-        name: "Dubai Main Workshop",
-        status: "active",
-      });
-    case "PATCH /service-centres/{serviceCentreId}":
-      return ok(event, {
-        id: serviceCentreId,
-        ...body,
-      });
-    default:
-      return methodNotAllowed(event);
+  static async handleCreateServiceCentre(lambdaContext: HttpLambdaContext): Promise<HttpResponse> {
+    const authError = ServiceCentresHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new ServiceCentresService(lambdaContext).createServiceCentre();
   }
-};
+
+  static async handleListServiceCentres(lambdaContext: HttpLambdaContext): Promise<HttpResponse> {
+    const authError = ServiceCentresHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new ServiceCentresService(lambdaContext).listServiceCentres();
+  }
+
+  static async handleGetServiceCentre(lambdaContext: HttpLambdaContext): Promise<HttpResponse> {
+    const authError = ServiceCentresHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new ServiceCentresService(lambdaContext).getServiceCentre();
+  }
+
+  static async handleUpdateServiceCentre(lambdaContext: HttpLambdaContext): Promise<HttpResponse> {
+    const authError = ServiceCentresHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new ServiceCentresService(lambdaContext).updateServiceCentre();
+  }
+}
+
+export default ServiceCentresHandler;

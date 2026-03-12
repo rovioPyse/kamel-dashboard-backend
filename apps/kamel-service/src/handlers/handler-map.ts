@@ -1,7 +1,7 @@
-import { handler as serviceAttachmentsHandler } from "./service-attachments";
-import { handler as serviceChecksHandler } from "./service-checks";
-import { handler as servicePartsHandler } from "./service-parts";
-import { handler as serviceRecordsHandler } from "./service-records";
+import ServiceAttachmentsHandler from "./service-attachments";
+import ServiceChecksHandler from "./service-checks";
+import ServicePartsHandler from "./service-parts";
+import ServiceRecordsHandler from "./service-records";
 import type { HttpLambdaContext } from "../types/lambda";
 import type { HttpResponse } from "../shared/http";
 
@@ -10,19 +10,19 @@ type RouteDefinition = {
 };
 
 export const routesMap: Record<string, RouteDefinition> = {
-  "POST /service-records": { handler: serviceRecordsHandler },
-  "GET /service-records": { handler: serviceRecordsHandler },
-  "GET /service-records/{serviceRecordId}": { handler: serviceRecordsHandler },
-  "PATCH /service-records/{serviceRecordId}": { handler: serviceRecordsHandler },
-  "GET /bikes/{bikeId}/service-records": { handler: serviceRecordsHandler },
-  "GET /bikes/{bikeId}/service-summary": { handler: serviceRecordsHandler },
-  "POST /service-records/{serviceRecordId}/checks": { handler: serviceChecksHandler },
-  "GET /service-records/{serviceRecordId}/checks": { handler: serviceChecksHandler },
-  "PATCH /service-checks/{checkId}": { handler: serviceChecksHandler },
-  "POST /service-records/{serviceRecordId}/parts-used": { handler: servicePartsHandler },
-  "GET /service-records/{serviceRecordId}/parts-used": { handler: servicePartsHandler },
-  "PATCH /service-parts-used/{partUsageId}": { handler: servicePartsHandler },
-  "POST /service-records/{serviceRecordId}/attachments": { handler: serviceAttachmentsHandler },
-  "GET /service-records/{serviceRecordId}/attachments": { handler: serviceAttachmentsHandler },
-  "POST /service-records/{serviceRecordId}/attachments/upload-url": { handler: serviceAttachmentsHandler },
+  "POST /service-records": { handler: ServiceRecordsHandler.handleCreateServiceRecord },
+  "GET /service-records": { handler: ServiceRecordsHandler.handleListServiceRecords },
+  "GET /service-records/{serviceRecordId}": { handler: ServiceRecordsHandler.handleGetServiceRecord },
+  "PATCH /service-records/{serviceRecordId}": { handler: ServiceRecordsHandler.handleUpdateServiceRecord },
+  "GET /bikes/{bikeId}/service-records": { handler: ServiceRecordsHandler.handleListBikeServiceRecords },
+  "GET /bikes/{bikeId}/service-summary": { handler: ServiceRecordsHandler.handleGetBikeServiceSummary },
+  "POST /service-records/{serviceRecordId}/checks": { handler: ServiceChecksHandler.handleCreateServiceCheck },
+  "GET /service-records/{serviceRecordId}/checks": { handler: ServiceChecksHandler.handleListServiceChecks },
+  "PATCH /service-checks/{checkId}": { handler: ServiceChecksHandler.handleUpdateServiceCheck },
+  "POST /service-records/{serviceRecordId}/parts-used": { handler: ServicePartsHandler.handleCreateServicePart },
+  "GET /service-records/{serviceRecordId}/parts-used": { handler: ServicePartsHandler.handleListServiceParts },
+  "PATCH /service-parts-used/{partUsageId}": { handler: ServicePartsHandler.handleUpdateServicePart },
+  "POST /service-records/{serviceRecordId}/attachments": { handler: ServiceAttachmentsHandler.handleCreateServiceAttachment },
+  "GET /service-records/{serviceRecordId}/attachments": { handler: ServiceAttachmentsHandler.handleListServiceAttachments },
+  "POST /service-records/{serviceRecordId}/attachments/upload-url": { handler: ServiceAttachmentsHandler.handleGetServiceUploadUrl },
 };

@@ -1,44 +1,37 @@
-import {
-  HttpResponse,
-  created,
-  getPathParameter,
-  list,
-  methodNotAllowed,
-  ok,
-  parseBody,
-  requireAnyGroup,
-} from "../shared/http";
+import { HttpResponse, requireAnyGroup } from "../shared/http";
+import { ServiceChecksService } from "../services/service-checks.service";
 import type { HttpLambdaContext } from "../types/lambda";
 
 const allowedGroups = ["service_user", "admin"];
 
-export const handler = async (lambdaContext: HttpLambdaContext): Promise<HttpResponse> => {
-  const { event } = lambdaContext;
-  const authError = requireAnyGroup(event, allowedGroups);
-  if (authError) {
-    return authError;
+class ServiceChecksHandler {
+  private static authorize(lambdaContext: HttpLambdaContext): HttpResponse | null {
+    return requireAnyGroup(lambdaContext.event, allowedGroups);
   }
 
-  const body = parseBody<Record<string, unknown>>(event) ?? {};
-  const serviceRecordId = getPathParameter(event, "serviceRecordId", "service-record-demo");
-  const checkId = getPathParameter(event, "checkId", "service-check-demo");
-
-  switch (event.routeKey) {
-    case "POST /service-records/{serviceRecordId}/checks":
-      return created(event, {
-        id: `service-check-${Date.now()}`,
-        serviceRecordId,
-        checkType: body.checkType ?? "powertrain",
-        status: body.status ?? "pending",
-      });
-    case "GET /service-records/{serviceRecordId}/checks":
-      return list(event, []);
-    case "PATCH /service-checks/{checkId}":
-      return ok(event, {
-        id: checkId,
-        ...body,
-      });
-    default:
-      return methodNotAllowed(event);
+  static async handleCreateServiceCheck(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = ServiceChecksHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new ServiceChecksService(lambdaContext).createServiceCheck();
   }
-};
+
+  static async handleListServiceChecks(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = ServiceChecksHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new ServiceChecksService(lambdaContext).listServiceChecks();
+  }
+
+  static async handleUpdateServiceCheck(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = ServiceChecksHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new ServiceChecksService(lambdaContext).updateServiceCheck();
+  }
+}
+
+export default ServiceChecksHandler;

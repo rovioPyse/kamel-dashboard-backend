@@ -1,8 +1,8 @@
-import { handler as bikesHandler } from "./bikes";
-import { handler as dashboardHandler } from "./dashboard";
-import { handler as providersHandler } from "./providers";
-import { handler as serviceCentresHandler } from "./service-centres";
-import { handler as usersHandler } from "./users";
+import BikesHandler from "./bikes";
+import DashboardHandler from "./dashboard";
+import ProvidersHandler from "./providers";
+import ServiceCentresHandler from "./service-centres";
+import UsersHandler from "./users";
 import type { HttpLambdaContext } from "../types/lambda";
 import type { HttpResponse } from "../shared/http";
 
@@ -11,23 +11,23 @@ type RouteDefinition = {
 };
 
 export const routesMap: Record<string, RouteDefinition> = {
-  "POST /bikes": { handler: bikesHandler },
-  "GET /bikes": { handler: bikesHandler },
-  "GET /bikes/{bikeId}": { handler: bikesHandler },
-  "PATCH /bikes/{bikeId}": { handler: bikesHandler },
-  "POST /users": { handler: usersHandler },
-  "GET /users": { handler: usersHandler },
-  "GET /users/{userId}": { handler: usersHandler },
-  "PATCH /users/{userId}": { handler: usersHandler },
-  "POST /users/{userId}/groups": { handler: usersHandler },
-  "POST /fleet-providers": { handler: providersHandler },
-  "GET /fleet-providers": { handler: providersHandler },
-  "GET /fleet-providers/{providerId}": { handler: providersHandler },
-  "PATCH /fleet-providers/{providerId}": { handler: providersHandler },
-  "POST /service-centres": { handler: serviceCentresHandler },
-  "GET /service-centres": { handler: serviceCentresHandler },
-  "GET /service-centres/{serviceCentreId}": { handler: serviceCentresHandler },
-  "PATCH /service-centres/{serviceCentreId}": { handler: serviceCentresHandler },
-  "GET /dashboard/bikes/{bikeId}": { handler: dashboardHandler },
-  "GET /dashboard/bikes/{bikeId}/timeline": { handler: dashboardHandler },
+  "POST /bikes": { handler: BikesHandler.handleCreateBike },
+  "GET /bikes": { handler: BikesHandler.handleListBikes },
+  "GET /bikes/{bikeId}": { handler: BikesHandler.handleGetBike },
+  "PATCH /bikes/{bikeId}": { handler: BikesHandler.handleUpdateBike },
+  "POST /users": { handler: UsersHandler.handleCreateUser },
+  "GET /users": { handler: UsersHandler.handleListUsers },
+  "GET /users/{userId}": { handler: UsersHandler.handleGetUser },
+  "PATCH /users/{userId}": { handler: UsersHandler.handleUpdateUser },
+  "POST /users/{userId}/groups": { handler: UsersHandler.handleAssignGroups },
+  "POST /fleet-providers": { handler: ProvidersHandler.handleCreateProvider },
+  "GET /fleet-providers": { handler: ProvidersHandler.handleListProviders },
+  "GET /fleet-providers/{providerId}": { handler: ProvidersHandler.handleGetProvider },
+  "PATCH /fleet-providers/{providerId}": { handler: ProvidersHandler.handleUpdateProvider },
+  "POST /service-centres": { handler: ServiceCentresHandler.handleCreateServiceCentre },
+  "GET /service-centres": { handler: ServiceCentresHandler.handleListServiceCentres },
+  "GET /service-centres/{serviceCentreId}": { handler: ServiceCentresHandler.handleGetServiceCentre },
+  "PATCH /service-centres/{serviceCentreId}": { handler: ServiceCentresHandler.handleUpdateServiceCentre },
+  "GET /dashboard/bikes/{bikeId}": { handler: DashboardHandler.handleGetDashboardBike },
+  "GET /dashboard/bikes/{bikeId}/timeline": { handler: DashboardHandler.handleGetDashboardBikeTimeline },
 };

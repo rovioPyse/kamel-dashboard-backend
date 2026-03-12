@@ -1,35 +1,25 @@
-import {
-  HttpResponse,
-  getPathParameter,
-  methodNotAllowed,
-  ok,
-  requireAnyGroup,
-} from "../shared/http";
+import { HttpResponse, requireAnyGroup } from "../shared/http";
+import { DashboardService } from "../services/dashboard.service";
 import type { HttpLambdaContext } from "../types/lambda";
 
-export const handler = async (lambdaContext: HttpLambdaContext): Promise<HttpResponse> => {
-  const { event } = lambdaContext;
-  const authError = requireAnyGroup(event, ["admin"]);
-  if (authError) {
-    return authError;
+class DashboardHandler {
+  private static authorize(lambdaContext: HttpLambdaContext): HttpResponse | null {
+    return requireAnyGroup(lambdaContext.event, ["admin"]);
   }
 
-  const bikeId = getPathParameter(event, "bikeId", "bike-demo");
-
-  switch (event.routeKey) {
-    case "GET /dashboard/bikes/{bikeId}":
-      return ok(event, {
-        bikeId,
-        bikeStatus: "active",
-        latestAssemblyStatus: "completed",
-        latestServiceStatus: "scheduled",
-      });
-    case "GET /dashboard/bikes/{bikeId}/timeline":
-      return ok(event, {
-        bikeId,
-        events: [],
-      });
-    default:
-      return methodNotAllowed(event);
+  static async handleGetDashboardBike(lambdaContext: HttpLambdaContext): Promise<HttpResponse> {
+    const authError = DashboardHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new DashboardService(lambdaContext).getDashboardBike();
   }
-};
+
+  static async handleGetDashboardBikeTimeline(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = DashboardHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new DashboardService(lambdaContext).getDashboardBikeTimeline();
+  }
+}
+
+export default DashboardHandler;

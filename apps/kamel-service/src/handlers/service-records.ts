@@ -1,57 +1,61 @@
-import {
-  HttpResponse,
-  created,
-  getPathParameter,
-  list,
-  methodNotAllowed,
-  ok,
-  parseBody,
-  requireAnyGroup,
-} from "../shared/http";
+import { HttpResponse, requireAnyGroup } from "../shared/http";
+import { ServiceRecordsService } from "../services/service-records.service";
 import type { HttpLambdaContext } from "../types/lambda";
 
 const allowedGroups = ["service_user", "admin"];
 
-export const handler = async (lambdaContext: HttpLambdaContext): Promise<HttpResponse> => {
-  const { event } = lambdaContext;
-  const authError = requireAnyGroup(event, allowedGroups);
-  if (authError) {
-    return authError;
+class ServiceRecordsHandler {
+  private static authorize(lambdaContext: HttpLambdaContext): HttpResponse | null {
+    return requireAnyGroup(lambdaContext.event, allowedGroups);
   }
 
-  const body = parseBody<Record<string, unknown>>(event) ?? {};
-  const serviceRecordId = getPathParameter(event, "serviceRecordId", "service-record-demo");
-  const bikeId = getPathParameter(event, "bikeId", "bike-demo");
-
-  switch (event.routeKey) {
-    case "POST /service-records":
-      return created(event, {
-        id: `service-record-${Date.now()}`,
-        bikeId: body.bikeId ?? bikeId,
-        status: body.status ?? "draft",
-      });
-    case "GET /service-records":
-      return list(event, []);
-    case "GET /service-records/{serviceRecordId}":
-      return ok(event, {
-        id: serviceRecordId,
-        bikeId,
-        status: "in_progress",
-      });
-    case "PATCH /service-records/{serviceRecordId}":
-      return ok(event, {
-        id: serviceRecordId,
-        ...body,
-      });
-    case "GET /bikes/{bikeId}/service-records":
-      return list(event, []);
-    case "GET /bikes/{bikeId}/service-summary":
-      return ok(event, {
-        bikeId,
-        latestStatus: "scheduled",
-        openIssues: 0,
-      });
-    default:
-      return methodNotAllowed(event);
+  static async handleCreateServiceRecord(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = ServiceRecordsHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new ServiceRecordsService(lambdaContext).createServiceRecord();
   }
-};
+
+  static async handleListServiceRecords(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = ServiceRecordsHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new ServiceRecordsService(lambdaContext).listServiceRecords();
+  }
+
+  static async handleGetServiceRecord(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = ServiceRecordsHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new ServiceRecordsService(lambdaContext).getServiceRecord();
+  }
+
+  static async handleUpdateServiceRecord(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = ServiceRecordsHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new ServiceRecordsService(lambdaContext).updateServiceRecord();
+  }
+
+  static async handleListBikeServiceRecords(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = ServiceRecordsHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new ServiceRecordsService(lambdaContext).listBikeServiceRecords();
+  }
+
+  static async handleGetBikeServiceSummary(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = ServiceRecordsHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new ServiceRecordsService(lambdaContext).getBikeServiceSummary();
+  }
+}
+
+export default ServiceRecordsHandler;

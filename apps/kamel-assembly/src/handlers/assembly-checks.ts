@@ -1,44 +1,37 @@
-import {
-  HttpResponse,
-  created,
-  getPathParameter,
-  list,
-  methodNotAllowed,
-  ok,
-  parseBody,
-  requireAnyGroup,
-} from "../shared/http";
+import { HttpResponse, requireAnyGroup } from "../shared/http";
+import { AssemblyChecksService } from "../services/assembly-checks.service";
 import type { HttpLambdaContext } from "../types/lambda";
 
 const allowedGroups = ["assembly_user", "admin"];
 
-export const handler = async (lambdaContext: HttpLambdaContext): Promise<HttpResponse> => {
-  const { event } = lambdaContext;
-  const authError = requireAnyGroup(event, allowedGroups);
-  if (authError) {
-    return authError;
+class AssemblyChecksHandler {
+  private static authorize(lambdaContext: HttpLambdaContext): HttpResponse | null {
+    return requireAnyGroup(lambdaContext.event, allowedGroups);
   }
 
-  const body = parseBody<Record<string, unknown>>(event) ?? {};
-  const assemblyRecordId = getPathParameter(event, "assemblyRecordId", "assembly-record-demo");
-  const checkId = getPathParameter(event, "checkId", "assembly-check-demo");
-
-  switch (event.routeKey) {
-    case "POST /assembly-records/{assemblyRecordId}/checks":
-      return created(event, {
-        id: `assembly-check-${Date.now()}`,
-        assemblyRecordId,
-        checkType: body.checkType ?? "qc_visual_inspection",
-        status: body.status ?? "pending",
-      });
-    case "GET /assembly-records/{assemblyRecordId}/checks":
-      return list(event, []);
-    case "PATCH /assembly-checks/{checkId}":
-      return ok(event, {
-        id: checkId,
-        ...body,
-      });
-    default:
-      return methodNotAllowed(event);
+  static async handleCreateAssemblyCheck(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = AssemblyChecksHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new AssemblyChecksService(lambdaContext).createAssemblyCheck();
   }
-};
+
+  static async handleListAssemblyChecks(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = AssemblyChecksHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new AssemblyChecksService(lambdaContext).listAssemblyChecks();
+  }
+
+  static async handleUpdateAssemblyCheck(
+    lambdaContext: HttpLambdaContext,
+  ): Promise<HttpResponse> {
+    const authError = AssemblyChecksHandler.authorize(lambdaContext);
+    if (authError) return authError;
+    return new AssemblyChecksService(lambdaContext).updateAssemblyCheck();
+  }
+}
+
+export default AssemblyChecksHandler;
