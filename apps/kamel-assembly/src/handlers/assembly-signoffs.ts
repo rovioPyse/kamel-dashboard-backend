@@ -1,5 +1,4 @@
 import {
-  HttpEvent,
   HttpResponse,
   created,
   getPathParameter,
@@ -8,10 +7,12 @@ import {
   parseBody,
   requireAnyGroup,
 } from "../shared/http";
+import type { HttpLambdaContext } from "../types/lambda";
 
 const allowedGroups = ["assembly_user", "admin"];
 
-export const handler = async (event: HttpEvent): Promise<HttpResponse> => {
+export const handler = async (lambdaContext: HttpLambdaContext): Promise<HttpResponse> => {
+  const { event } = lambdaContext;
   const authError = requireAnyGroup(event, allowedGroups);
   if (authError) {
     return authError;

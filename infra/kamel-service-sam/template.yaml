@@ -75,7 +75,6 @@ Resources:
       Description: Service record lifecycle API
       Environment:
         Variables:
-          HANDLER_NAME: service-records-handler
           ALLOWED_GROUPS: service_user,admin
       Events:
         CreateServiceRecord:
@@ -129,7 +128,6 @@ Resources:
       Description: Service checks API
       Environment:
         Variables:
-          HANDLER_NAME: service-checks-handler
           ALLOWED_GROUPS: service_user,admin
       Events:
         CreateServiceCheck:
@@ -165,7 +163,6 @@ Resources:
       Description: Service parts API
       Environment:
         Variables:
-          HANDLER_NAME: service-parts-handler
           ALLOWED_GROUPS: service_user,admin
       Events:
         CreateServicePart:
@@ -201,7 +198,6 @@ Resources:
       Description: Service attachments API
       Environment:
         Variables:
-          HANDLER_NAME: service-attachments-handler
           ALLOWED_GROUPS: service_user,admin
       Policies:
         - Statement:

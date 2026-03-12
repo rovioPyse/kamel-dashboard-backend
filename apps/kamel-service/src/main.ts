@@ -1,39 +1,25 @@
-import { createLogger } from "@kamel-dashboard-backend/logging";
-import { handler as serviceAttachmentsHandler } from "./handlers/service-attachments";
-import { handler as serviceChecksHandler } from "./handlers/service-checks";
-import { handler as servicePartsHandler } from "./handlers/service-parts";
-import { handler as serviceRecordsHandler } from "./handlers/service-records";
 import { HttpEvent, HttpResponse, error } from "./shared/http";
-
-type RouteHandler = (event: HttpEvent) => Promise<HttpResponse>;
-
-const handlers: Record<string, RouteHandler> = {
-  "service-attachments-handler": serviceAttachmentsHandler,
-  "service-checks-handler": serviceChecksHandler,
-  "service-parts-handler": servicePartsHandler,
-  "service-records-handler": serviceRecordsHandler,
-};
+import { routesMap } from "./handlers/handler-map";
+import { buildLambdaContext } from "./utils/context-builder";
 
 export const handler = async (event: HttpEvent): Promise<HttpResponse> => {
-  const handlerName = process.env.HANDLER_NAME ?? "";
-  const logger = createLogger({
-    app: "kamel-service",
-    handler: handlerName,
-    requestId: event.requestContext?.requestId,
-  });
-  const routeHandler = handlers[handlerName];
+  const lambdaContext = await buildLambdaContext(event);
+  const { logger, requestId, event: eventContext } = lambdaContext;
+  const routeKey = eventContext.routeKey ?? "";
+  const route = routesMap[routeKey];
 
-  if (!routeHandler) {
-    logger.error("Handler mapping is missing", { handlerName });
-    return error(event, 500, "MISCONFIGURED_HANDLER", "Lambda handler is not configured");
+  if (!route) {
+    logger.error("No route found", { routeKey, requestId });
+    return error(eventContext, 404, "NO_METHOD_FOUND", `No method found for ${routeKey}`);
   }
 
-  logger.info("Request received", { routeKey: event.routeKey });
+  logger.info("Request received", { routeKey, requestId });
 
   try {
-    const response = await routeHandler(event);
+    const response = await route.handler(lambdaContext);
     logger.info("Request completed", {
-      routeKey: event.routeKey,
+      routeKey,
+      requestId,
       statusCode: response.statusCode,
     });
     return response;
@@ -41,9 +27,10 @@ export const handler = async (event: HttpEvent): Promise<HttpResponse> => {
     const message =
       caughtError instanceof Error ? caughtError.message : "Unknown error";
     logger.error("Request failed", {
-      routeKey: event.routeKey,
+      routeKey,
+      requestId,
       error: message,
     });
-    return error(event, 500, "INTERNAL_SERVER_ERROR", "Unexpected error");
+    return error(eventContext, 500, "INTERNAL_SERVER_ERROR", "Unexpected error");
   }
 };

@@ -75,7 +75,6 @@ Resources:
       Description: Assembly record lifecycle API
       Environment:
         Variables:
-          HANDLER_NAME: assembly-records-handler
           ALLOWED_GROUPS: assembly_user,admin
       Events:
         CreateAssemblyRecord:
@@ -129,7 +128,6 @@ Resources:
       Description: Assembly checks API
       Environment:
         Variables:
-          HANDLER_NAME: assembly-checks-handler
           ALLOWED_GROUPS: assembly_user,admin
       Events:
         CreateAssemblyCheck:
@@ -165,7 +163,6 @@ Resources:
       Description: Assembly attachments API
       Environment:
         Variables:
-          HANDLER_NAME: assembly-attachments-handler
           ALLOWED_GROUPS: assembly_user,admin
       Policies:
         - Statement:
@@ -211,7 +208,6 @@ Resources:
       Description: Assembly signoff API
       Environment:
         Variables:
-          HANDLER_NAME: assembly-signoffs-handler
           ALLOWED_GROUPS: assembly_user,admin
       Events:
         CreateAssemblySignoff:

@@ -72,7 +72,6 @@ Resources:
       Description: Admin bike master API
       Environment:
         Variables:
-          HANDLER_NAME: bikes-handler
           ALLOWED_GROUPS: admin
       Events:
         CreateBike:
@@ -114,7 +113,6 @@ Resources:
       Description: Admin user management API
       Environment:
         Variables:
-          HANDLER_NAME: users-handler
           ALLOWED_GROUPS: admin
       Policies:
         - Statement:
@@ -173,7 +171,6 @@ Resources:
       Description: Admin provider management API
       Environment:
         Variables:
-          HANDLER_NAME: providers-handler
           ALLOWED_GROUPS: admin
       Events:
         CreateProvider:
@@ -215,7 +212,6 @@ Resources:
       Description: Admin service centre management API
       Environment:
         Variables:
-          HANDLER_NAME: service-centres-handler
           ALLOWED_GROUPS: admin
       Events:
         CreateServiceCentre:
@@ -257,7 +253,6 @@ Resources:
       Description: Admin dashboard read model API
       Environment:
         Variables:
-          HANDLER_NAME: dashboard-handler
           ALLOWED_GROUPS: admin
       Events:
         GetDashboardBike:
