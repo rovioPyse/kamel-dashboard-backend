@@ -11,6 +11,9 @@
   "references": [
     {
       "path": "../../libs/logging/tsconfig.lib.json"
+    },
+    {
+      "path": "../../libs/common/tsconfig.lib.json"
     }
   ]
 }

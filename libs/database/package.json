@@ -1,20 +1,26 @@
 {
-  "name": "@kamel-dashboard-backend/database",
-  "version": "0.0.1",
-  "private": true,
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    "./package.json": "./package.json",
-    ".": {
-      "@kamel-dashboard-backend/source": "./src/index.ts",
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
-    }
-  },
-  "dependencies": {
-    "tslib": "^2.3.0"
-  }
+    "name":  "@kamel-dashboard-backend/database",
+    "version":  "0.0.1",
+    "private":  true,
+    "main":  "./dist/index.js",
+    "module":  "./dist/index.js",
+    "types":  "./dist/index.d.ts",
+    "exports":  {
+                    "./package.json":  "./package.json",
+                    ".":  {
+                              "@kamel-dashboard-backend/source":  "./src/index.ts",
+                              "types":  "./dist/index.d.ts",
+                              "import":  "./dist/index.js",
+                              "default":  "./dist/index.js"
+                          }
+                },
+    "dependencies":  {
+                         "tslib":  "^2.3.0",
+                         "@aws-sdk/client-secrets-manager":  "^3.973.0",
+                         "pg":  "^8.16.3"
+                     },
+    "devDependencies":  {
+                            "@types/pg":  "^8.15.5",
+                            "@types/aws-lambda":  "^8.10.152"
+                        }
 }
