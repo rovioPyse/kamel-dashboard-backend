@@ -1,5 +1,16 @@
-import { created, getPathParameter, list, ok, parseBody } from "@kamel-dashboard-backend/common";
+import {
+  created,
+  getPathParameter,
+  ok,
+  parseBody,
+} from "@kamel-dashboard-backend/common";
+import { query } from "@kamel-dashboard-backend/database";
 import type { HttpLambdaContext } from "../types/lambda";
+
+type DatabaseCheckRow = {
+  connectedAt: string;
+  version: string;
+};
 
 export class BikesService {
   constructor(private readonly lambdaContext: HttpLambdaContext) {}
@@ -17,8 +28,30 @@ export class BikesService {
     });
   }
 
-  listBikes() {
-    return list(this.lambdaContext.event, []);
+  async listBikes() {
+    const { event, logger } = this.lambdaContext;
+
+    const result = await query<DatabaseCheckRow>(
+      `
+        SELECT NOW()::text AS "connectedAt", version() AS version
+      `
+    );
+
+    logger.info("Temporary bike DB connectivity check succeeded", {
+      connectedAt: result.rows[0]?.connectedAt,
+    });
+
+    return ok(event, {
+      items: [],
+      page: 1,
+      pageSize: 20,
+      total: 0,
+      dbCheck: {
+        connected: true,
+        connectedAt: result.rows[0]?.connectedAt ?? null,
+        version: result.rows[0]?.version ?? null,
+      },
+    });
   }
 
   getBike() {

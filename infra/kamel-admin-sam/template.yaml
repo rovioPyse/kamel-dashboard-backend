@@ -7,18 +7,6 @@ Parameters:
     Type: String
     AllowedValues: [dev, prod]
 
-  DatabaseName:
-    Type: String
-    Default: kamel
-
-  DatabaseEndpoint:
-    Type: String
-    Default: ""
-
-  DatabaseSecretArn:
-    Type: String
-    Default: ""
-
 Globals:
   Function:
     Runtime: nodejs20.x
@@ -39,9 +27,20 @@ Globals:
       Variables:
         APP_ENV: !Ref Environment
         APP_NAME: kamel-admin
-        DATABASE_NAME: !Ref DatabaseName
-        DATABASE_ENDPOINT: !Ref DatabaseEndpoint
-        DATABASE_SECRET_ARN: !Ref DatabaseSecretArn
+        DB_SECRET_ARN:
+          Fn::ImportValue: !Sub KamelAuroraSecretArn-${Environment}
+        DB_HOST:
+          Fn::ImportValue: !Sub KamelAuroraEndpoint-${Environment}
+        DB_PORT: "5432"
+        DB_NAME: kamel
+        DB_USER: kamel_admin
+        DB_SSL_CA_PATH: /certs/global-bundle.pem
+        DB_POOL_MAX: "1"
+        DB_IDLE_TIMEOUT_MS: "30000"
+        DB_CONNECTION_TIMEOUT_MS: "5000"
+        DB_STATEMENT_TIMEOUT_MS: "15000"
+        DB_QUERY_TIMEOUT_MS: "15000"
+        DB_SECRET_CACHE_TTL_MS: "300000"
         USER_POOL_ID:
           Fn::ImportValue: !Sub KamelUserPoolId-${Environment}
         USER_POOL_ARN:
@@ -70,6 +69,13 @@ Resources:
     Properties:
       FunctionName: !Sub kamel-admin-bikes-${Environment}
       Description: Admin bike master API
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource:
+              Fn::ImportValue: !Sub KamelAuroraSecretArn-${Environment}
       Environment:
         Variables:
           ALLOWED_GROUPS: admin
@@ -111,10 +117,13 @@ Resources:
     Properties:
       FunctionName: !Sub kamel-admin-users-${Environment}
       Description: Admin user management API
-      Environment:
-        Variables:
-          ALLOWED_GROUPS: admin
       Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource:
+              Fn::ImportValue: !Sub KamelAuroraSecretArn-${Environment}
         - Statement:
             Effect: Allow
             Action:
@@ -125,6 +134,9 @@ Resources:
               - cognito-idp:ListUsers
             Resource:
               Fn::ImportValue: !Sub KamelUserPoolArn-${Environment}
+      Environment:
+        Variables:
+          ALLOWED_GROUPS: admin
       Events:
         CreateUser:
           Type: HttpApi
@@ -169,6 +181,13 @@ Resources:
     Properties:
       FunctionName: !Sub kamel-admin-providers-${Environment}
       Description: Admin provider management API
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource:
+              Fn::ImportValue: !Sub KamelAuroraSecretArn-${Environment}
       Environment:
         Variables:
           ALLOWED_GROUPS: admin
@@ -210,6 +229,13 @@ Resources:
     Properties:
       FunctionName: !Sub kamel-admin-service-centres-${Environment}
       Description: Admin service centre management API
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource:
+              Fn::ImportValue: !Sub KamelAuroraSecretArn-${Environment}
       Environment:
         Variables:
           ALLOWED_GROUPS: admin
@@ -251,6 +277,13 @@ Resources:
     Properties:
       FunctionName: !Sub kamel-admin-dashboard-${Environment}
       Description: Admin dashboard read model API
+      Policies:
+        - Statement:
+            Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource:
+              Fn::ImportValue: !Sub KamelAuroraSecretArn-${Environment}
       Environment:
         Variables:
           ALLOWED_GROUPS: admin
