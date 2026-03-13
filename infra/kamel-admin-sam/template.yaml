@@ -34,7 +34,6 @@ Globals:
         DB_PORT: "5432"
         DB_NAME: kamel
         DB_USER: kamel_admin
-        DB_SSL_CA_PATH: /certs/global-bundle.pem
         DB_POOL_MAX: "1"
         DB_IDLE_TIMEOUT_MS: "30000"
         DB_CONNECTION_TIMEOUT_MS: "5000"

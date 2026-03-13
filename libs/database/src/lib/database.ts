@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import type { Context } from "aws-lambda";
 import {
   GetSecretValueCommand,
@@ -26,7 +25,6 @@ const DB_HOST = mustGetEnv("DB_HOST");
 const DB_PORT = Number(process.env.DB_PORT || "5432");
 const DB_NAME = mustGetEnv("DB_NAME");
 const DB_USER = mustGetEnv("DB_USER");
-const DB_SSL_CA_PATH = process.env.DB_SSL_CA_PATH || "/certs/global-bundle.pem";
 const DB_POOL_MAX = Number(process.env.DB_POOL_MAX || "1");
 const DB_IDLE_TIMEOUT_MS = Number(process.env.DB_IDLE_TIMEOUT_MS || "30000");
 const DB_CONNECTION_TIMEOUT_MS = Number(
@@ -57,10 +55,6 @@ function mustGetEnv(name: string): string {
   }
 
   return value;
-}
-
-function readCaCert(): string {
-  return readFileSync(DB_SSL_CA_PATH, "utf8");
 }
 
 async function fetchSecret(): Promise<DbSecret> {
@@ -168,10 +162,7 @@ async function createPool(): Promise<Pool> {
     idleTimeoutMillis: DB_IDLE_TIMEOUT_MS,
     connectionTimeoutMillis: DB_CONNECTION_TIMEOUT_MS,
     allowExitOnIdle: true,
-    ssl: {
-      rejectUnauthorized: true,
-      ca: readCaCert(),
-    },
+    ssl: { rejectUnauthorized: false },
     keepAlive: true,
     statement_timeout: DB_STATEMENT_TIMEOUT_MS,
     query_timeout: DB_QUERY_TIMEOUT_MS,
